@@ -9,6 +9,7 @@
 | screenshot.py     | Take screenshot                                                                   | PyQt5            |
 | preprocess.py     | Preprocess image                                                                  | opencv           |
 | classification.py | Classify regions of screenshot on rectangle(or images) and text regions           | pytorch          |
+| train_data_collector.py | Prepare data in form of button images or rectangular area  for cnn training           | pytorch, PyQt5          |
 | gui.py            | Shortkey and gui panel logic                                                      | PyQt5            |
 | test.py           | List of tests on all subsystems of UsefulClicker                                  | All of the above |
 | script_builder    | Create python script based on recording of user input events (mouse and keyboard) |                  |
