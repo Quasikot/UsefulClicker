@@ -18,6 +18,6 @@
 |  |  | Text regions highlighed in green. Rectangle areas highlighted in red. Undetected regions is not highlighted at all. |
 |  |  |  |
 |  | CNNCharacterRecognition Test | This is a complex test that checks how whole optical character recognition subsystem works |
-|  | Type Test | Useful clicker focus on the search box of the browser and type some predefined text |
-|  | Notepad test 1 | 1. Launch Notepad<br>2. Type some text<br>3. Change font of a text through a menu<br>4. Save  |
+|  | Type Test | Useful clicker focus on the search box of the browser and type some predefined text. Make shure that you can adjust the delay parameter |
+|  | Notepad test 1 | 1. Launch Notepad<br>2. Type some text<br>3. Change a font of a text through a menu<br>4. Save  |
 |  | Twitter test 1 | 1. Launch browser on twitter.com<br>2. Type text of a twit<br>3. Push the "send" button |
