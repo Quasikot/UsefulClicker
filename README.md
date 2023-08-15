@@ -1,7 +1,7 @@
 This project is licensed under the terms of the GNU General Public License v3.0
 
   + - - - + - + - -
-  + - + - + copyright by Vladimir Baranov (Kvazikot)  <br>
+  + - + - + created by Vladimir Baranov (Kvazikot)  <br>
   + - + - + email: vsbaranov83@gmail.com  <br>
 ```
                             )            (
