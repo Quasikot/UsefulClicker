@@ -1,23 +1,9 @@
   + - - - + - + - -
-  + - + - + copyright by Vladimir Baranov (Quasikot)  <br>
-  + - + - + email: vsbaranov83@gmail.com  <br>
-```
-                            )            (
-                           /(   (\___/)  )\
-                          ( #)  \ ('')| ( #
-                           ||___c\  > '__||
-                           ||**** ),_/ **'|
-                     .__   |'* ___| |___*'|
-                      \_\  |' (    ~   ,)'|
-                       ((  |' /(.  '  .)\ |
-                        \\_|_/ <_ _____> \______________
-                         /   '-, \   / ,-'      ______  \
-                b'ger   /      (//   \\)     __/     /   \
-                                            './_____/
-```             
+  + - + - + created by Vladimir Baranov (Quasikot)  <br>
+  + - + - + email: vsbaranov83@gmail.com  <br>      
 Document creation date: 15/08/23
 
-## List of main modules
+# List of main modules
 
 |    Module name    |                                    Description                                    |    Dependency    |
 |:-----------------:|:---------------------------------------------------------------------------------:|:----------------:|
