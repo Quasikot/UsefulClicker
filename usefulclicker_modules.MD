@@ -1,9 +1,8 @@
-  + - - - + - + - -
+  + - - - + - + - - creation date: 15/08/23
   + - + - + created by Vladimir Baranov (Quasikot)  <br>
   + - + - + email: vsbaranov83@gmail.com  <br>      
-Document creation date: 15/08/23
 
-# List of main modules
+#                     List of main modules
 
 |    Module name    |                                    Description                                    |    Dependency    |
 |:-----------------:|:---------------------------------------------------------------------------------:|:----------------:|
