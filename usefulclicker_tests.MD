@@ -1,6 +1,4 @@
-  + - - - + - + - - creation date: 15/08/23
-  + - + - + created by Vladimir Baranov (Quasikot)  <br>
-  + - + - + email: vsbaranov83@gmail.com  <br>   
+
 | # | Test name | Description |
 |---|:---:|:---:|
 |  | Screenshot Test | take a screenshot and save it to screenshot.png using PyQt5 API |
