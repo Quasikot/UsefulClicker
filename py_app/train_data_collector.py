@@ -14,7 +14,7 @@ from PyQt5.QtGui import QImage, QPainter
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import Qt  
 from PyQt5.QtGui import QFontDatabase, QFont, QColor
-  
+from PyQt5.QtGui import QImage, QPainter, QTransform
 
 def prepare_char_data():
   # Read the image.
@@ -40,6 +40,20 @@ def prepare_char_data():
     index = index + 1
     
   cv2.imwrite("contours.png", image)
+
+
+def affine_transform(image, angle, translate):
+  transform = QTransform()
+  transform.rotate(angle)
+  transform.translate(translate[0], translate[1])
+
+  new_image = QImage(image.size(), QImage.Format_RGB888)
+  painter = QPainter(new_image)
+  painter.setTransform(transform)
+  painter.fillRect(new_image.rect(), Qt.white)
+  painter.drawImage(0, 0, image)
+
+  return new_image
   
 def prepare_char_data_qt():
     chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()-_+={}[]:;<>,.?/'
@@ -60,7 +74,13 @@ def prepare_char_data_qt():
           painter.setPen(Qt.black)
           painter.fillRect(image.rect(), Qt.white)
           painter.drawText(image.rect(), Qt.AlignCenter, character)
-          image.save(f"char_data\{character_index}_{i}.png")
+          if i < len(fonts)-10:
+              image.save(f"char_data\{character_index}_{i}.png")
+          else:
+              angle = random.randint(-5, 5)
+              translate = (random.randint(0, image.width()/2), random.randint(0, image.height()/2))
+              new_image = affine_transform(image, angle, translate)
+              image.save(f"test_data\{character_index}_{i}.png")
           i = i + 1
         character_index = character_index + 1
 #prepare_char_data()

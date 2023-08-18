@@ -20,7 +20,7 @@ class CharDataset(torch.utils.data.Dataset):
         for filename in os.listdir(root_dir):
             image_path = os.path.join(root_dir, filename)
             label = int(filename.split('_')[0])
-            print(f"label {label}")
+            #print(f"label {label}")
 
             self.images.append(image_path)
             self.labels.append(label)
@@ -94,13 +94,15 @@ class CNN(torch.nn.Module):
 
 # Create the model instance
 model = CNN()
+# Move the module to GPU
+
 
 # Define the loss function and optimizer
 criterion = torch.nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
 # Train the model
-for epoch in range(100):
+for epoch in range(10):
     for i, (images, labels) in enumerate(train_loader):
         # Forward pass
         outputs = model(images)
@@ -115,16 +117,18 @@ for epoch in range(100):
             print('Epoch: {} Loss: {:.4f}'.format(epoch, loss.item()))
 
 # # Test the model
+test_dataset = CharDataset(root_dir='./test_data', transform=transform)
+train_loader = data_utils.DataLoader(test_dataset, batch_size=32, shuffle=True)
 # test_data = dataset.test_data.transform(transform)
 # test_labels = dataset.test_labels
 
-# correct = 0
-# total = 0
+correct = 0
+total = 0
 
-# for images, labels in test_data:
-#     outputs = model(images)
-#     _, predicted = torch.max(outputs.data, 1)
-#     total += labels.size(0)
-#     correct += (predicted == labels).sum().item()
+for i, (images, labels) in enumerate(train_loader):
+    outputs = model(images)
+    _, predicted = torch.max(outputs.data, 1)
+    total += labels.size(0)
+    correct += (predicted == labels).sum().item()
 
-# print('Accuracy: {}%'.format(100 * correct / total))
+print('Accuracy: {}%'.format(100 * correct / total))
