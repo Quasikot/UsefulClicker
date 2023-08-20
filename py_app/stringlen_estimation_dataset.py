@@ -54,8 +54,10 @@ def renderString(text, font):
        f = QFont(font)
        f.setPixelSize(30)
        painter.setFont(f)
-       painter.setPen(Qt.black)
-       painter.fillRect(image.rect(), Qt.white)
+       gray_value_bg = random.randint(170, 255)
+       gray_value_fg = int(gray_value_bg / 2) + random.randint(-50, 50)
+       painter.setPen(QColor(gray_value_fg, gray_value_fg, gray_value_fg))
+       painter.fillRect(image.rect(), QColor(gray_value_bg, gray_value_bg, gray_value_bg))
        painter.drawText(image.rect(), Qt.AlignCenter, text)
        
        bounding_rect = painter.boundingRect(image.rect(), Qt.AlignCenter, text)

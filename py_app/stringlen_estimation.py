@@ -143,10 +143,12 @@ def test_model():
         _, predicted = torch.max(outputs.data, 1)
         total += labels.size(0)
         correct += (predicted == labels).sum().item()
+        print(predicted)
     
     print('Accuracy: {}%'.format(100 * correct / total))
 
 
-train_model()
-test_model()
+#train_model()
+#model = torch.load("stringlen_estimation.model")
+#test_model()
   

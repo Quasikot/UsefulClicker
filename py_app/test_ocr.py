@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import random
 from screenshot import take_screenshot
-
+import shutil
 import sys
 import torchvision
 import torchvision.transforms as transforms
@@ -180,13 +180,10 @@ def detect_chars():
     #cv2.drawContours(image, [contour], 0, random_color, 2)
     bounding_rect = cv2.boundingRect(contour)
     bounding_rect = (bounding_rect[0]-3, bounding_rect[1]-3,bounding_rect[2]+3,bounding_rect[3]+3)
-    rects.append(bounding_rect)
+    
     if bounding_rect[2] > 20:
-        sub_image = crop_rect(image, bounding_rect[0], bounding_rect[1], 
-                                     bounding_rect[0] + bounding_rect[2], 
-                                     bounding_rect[1] + bounding_rect[3])
-        #n_chars = pre_image(sub_image, model)
-        #split_word_rect(image, bounding_rect, n_chars)
+        rects.append(bounding_rect)
+  
     cv2.rectangle(rimage, (bounding_rect[0], bounding_rect[1]),
                    (bounding_rect[0] + bounding_rect[2], bounding_rect[1] + bounding_rect[3]),
                    random_color, 2)
@@ -234,9 +231,9 @@ class StringsLenDataset(torch.utils.data.Dataset):
             #image =  cv2_to_torch(grayscale_image)  
             image =  read_image(filename, ImageReadMode.GRAY)
             image = image.float()
-            print(image.shape)
+            #print(image.shape)
         except:
-            print("err")
+            #print("err")
             grayscale_image = np.zeros((32, 160), dtype=np.uint8)
          
             filename = f"tmp\{random.randint(0, 10000)}.png"
@@ -244,7 +241,7 @@ class StringsLenDataset(torch.utils.data.Dataset):
             #image =  cv2_to_torch(grayscale_image)  
             image =  read_image(filename, ImageReadMode.GRAY)
             image = image.float()
-            print(f"exception {image.shape}")
+            #print(f"exception {image.shape}")
         
        # if self.transform is not None:
        #     image = self.transform(image)
@@ -264,6 +261,9 @@ class StringsLenDataset(torch.utils.data.Dataset):
 
 
 rects, image = detect_chars()
+
+shutil.rmtree("tmp",)
+os.mkdir("tmp")
 
 # Create the model instance
 model = StringLenEstimationModel()
