@@ -13,3 +13,5 @@
 | gui.py            | Shortkey and gui panel logic                                                      | PyQt5            |
 | test.py           | List of tests on all subsystems of UsefulClicker                                  | All of the above |
 | script_builder    | Create python script based on recording of user input events (mouse and keyboard) |                  |
+|stringlen_estimation_dataset.py| Prepare data for training cnn. Load words from textbook and render it in separate file | |
+|stringlen_estimation.py| CNN that can predict length of a string based on a given image | |
