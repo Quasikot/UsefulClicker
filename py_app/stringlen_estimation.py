@@ -38,7 +38,7 @@ class StringsDataset(torch.utils.data.Dataset):
        # image = (imagetun).unsqueeze(0)
         image = image.float()
         image = image.to('cuda')
-        print(image.shape)
+        #print(image.shape)
        
 
         label = torch.tensor(self.labels[index])
@@ -90,7 +90,7 @@ class StringLenEstimationModel(torch.nn.Module):
   		# flatten the output from the previous layer and pass it
   		# through our only set of FC => RELU layers
         x = self.flat(x)
-        print(x.shape)
+        #print(x.shape)
         x = self.fc1(x)
         x = self.relu3(x)
         x = self.fc2(x)
@@ -147,6 +147,6 @@ def test_model():
     print('Accuracy: {}%'.format(100 * correct / total))
 
 
-#train_model()
-#test_model()
+train_model()
+test_model()
   

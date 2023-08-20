@@ -22,19 +22,11 @@ app = QtWidgets.QApplication(sys.argv)
 def affine_transform(image, angle, translate, scale_factor):
 
 
-    
-    width, height = image.width(), image.height()
 
-    new_width = int(width * scale_factor)
-    new_height = int(height * scale_factor)
-
-    resized_image = image.scaled(new_width, new_height)
+    image_copy = image.copy()
     image.fill(Qt.white)
     painter = QPainter(image)
-    x = (width - new_width) // 2
-    y = (height - new_height) // 2
-    painter.drawImage(x+translate[0], y+translate[1], resized_image)
-    painter.end()
+    painter.drawImage(translate[0], translate[1], image_copy)
 
 
     return image
@@ -66,6 +58,10 @@ def renderString(text, font):
        painter.fillRect(image.rect(), Qt.white)
        painter.drawText(image.rect(), Qt.AlignCenter, text)
        
+       bounding_rect = painter.boundingRect(image.rect(), Qt.AlignCenter, text)
+       cropped_image = image.copy(bounding_rect)
+       cropped_image = cropped_image.scaled(image.width(), image.height())
+       
        ##----------------------------- this code only for test
        
       # metrics = QFontMetrics(f)
@@ -81,7 +77,7 @@ def renderString(text, font):
        #   x += spacing
        #  #-----------------------------
        del painter
-       return image
+       return cropped_image
 
 def remove_items(list_, indices):
   # Create a new list without the items at the specified indices
@@ -118,7 +114,7 @@ with open(filename, "r", encoding='utf-8') as f:
             image = renderString(word, font)  
             label = len(word)
             image.save(f"string_estimation_data\{label}_{i}.png")
-            translate = (random.randint(0, int(image.width()/10)), random.randint(0, int(image.height()/10)))
+            translate = (random.randint(-int(image.width()/10), int(image.width()/10)), random.randint(-int(image.height()/10), int(image.height()/10)))
             scale = 0.7 + random.random() * 0.3
             new_image = affine_transform(image, 0, translate, scale)
             new_image.save(f"string_estimation_data\{label}_{i}.png")
