@@ -1,4 +1,9 @@
 # -*- coding: utf-8 -*-
+"""
+Created on Wed Aug 23 15:01:57 2023
+
+@author: admin
+"""
 import torch
 from torch.nn import ReLU, LogSoftmax
 from torch import flatten
@@ -8,12 +13,13 @@ import torch.utils.data as data_utils
 import os
 from torchvision.io import read_image, ImageReadMode
 from PIL import Image
+import cv2
+import matplotlib.pyplot as plt
 
 # Create a custom dataset class
 class CharDataset(torch.utils.data.Dataset):
-    def __init__(self, root_dir, transform=None):
+    def __init__(self, root_dir):
         self.root_dir = root_dir
-        self.transform = transform
        # self.transform = transforms.Compose([transforms.ToTensor()])
         self.images = []
         self.labels = []
@@ -43,21 +49,9 @@ class CharDataset(torch.utils.data.Dataset):
         label = torch.tensor(self.labels[index])
         label = label.to('cuda')
 
-        return image, label
-
-# Transform the training data with geometric transformations
-transform = transforms.Compose([
-    transforms.ToTensor(),
-    transforms.RandomAffine(degrees=0, translate=(0.2, 0.2), scale=(0.1, 0.3)),
-])
-
-# Load the custom dataset
-dataset = CharDataset(root_dir='./char_data', transform=transform)
-train_loader = data_utils.DataLoader(dataset, batch_size=32, shuffle=True)
+        return image_path, image, label
 
 num_classes = 88
-#train_data = dataset.transform(transform)
-
 # Define the CNN model
 class CNN(torch.nn.Module):
     def __init__(self):
@@ -115,50 +109,34 @@ class CNN(torch.nn.Module):
         output = self.logSoftmax(x)
         return x
 
-# Create the model instance
-model = CNN()
-# Move the module to GPU
-
-model = model.to('cuda')
-
-# Define the loss function and optimizer
-criterion = torch.nn.CrossEntropyLoss()
-optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
-
-def train_model():
-    # Train the model
-    for epoch in range(25):
-        for i, (images, labels) in enumerate(train_loader):
-            # Forward pass
-            outputs = model(images)
-            loss = criterion(outputs, labels)
-    
-            # Backward pass
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
-    
-            if i % 100 == 0:
-                print('Epoch: {} Loss: {:.4f}'.format(epoch, loss.item()))
-    
-    torch.save(model, "english_chars_cnn.model")
-
-train_model()
+chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()-_+={}[]:;<>,.?/'
 # # Test the model
-test_dataset = CharDataset(root_dir='./test_data', transform=transform)
-train_loader = data_utils.DataLoader(test_dataset, batch_size=32, shuffle=True)
+model = torch.load("english_chars_cnn.model")
+test_dataset = CharDataset(root_dir='preprocess//chars')
+train_loader = data_utils.DataLoader(test_dataset, batch_size=32, shuffle=False)
 # test_data = dataset.test_data.transform(transform)
 # test_labels = dataset.test_labels
 
 correct = 0
 total = 0
 
-for i, (images, labels) in enumerate(train_loader):
+words = {}
+
+for i, (image_paths, images, labels) in enumerate(train_loader):
     outputs = model(images)
     _, predicted = torch.max(outputs.data, 1)
-    print(f"pred:{predicted[0]}")
+    #print(f"labels={len(labels)}")
     #print(outputs.data[0])
+    #im = cv2.imread(image_paths[0])
+    #plt.imshow(im)
+    #plt.show()
+    #print(chars[predicted[0]])
     total += labels.size(0)
     correct += (predicted == labels).sum().item()
-
-print('Accuracy: {}%'.format(100 * correct / total))
+    for i, label in enumerate(labels):
+        if label.item() not in words:
+            words[label.item()] = ""
+            print(label.item())
+        words[label.item()]+=chars[predicted[i]] 
+print(words)
+#print('Accuracy: {}%'.format(100 * correct / total))
