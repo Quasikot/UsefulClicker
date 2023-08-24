@@ -55,7 +55,7 @@ transform = transforms.Compose([
 dataset = CharDataset(root_dir='./char_data', transform=transform)
 train_loader = data_utils.DataLoader(dataset, batch_size=32, shuffle=True)
 
-num_classes = 88
+num_classes = 154
 #train_data = dataset.transform(transform)
 
 # Define the CNN model
@@ -63,17 +63,20 @@ class CNN(torch.nn.Module):
     def __init__(self):
         super(CNN, self).__init__()
 
-        self.conv1 = torch.nn.Conv2d(1, 64, kernel_size=(5,5), stride=1, padding=1)
+        self.conv1 = torch.nn.Conv2d(1, 32, kernel_size=(5,5), stride=1, padding=1)
         self.pool1 = torch.nn.MaxPool2d(kernel_size=(2, 2))
         self.relu1 = ReLU()
-        self.conv2 = torch.nn.Conv2d(64, 64, kernel_size=(2,2), stride=1, padding=0)
+        self.conv2 = torch.nn.Conv2d(32, 64, kernel_size=(2,2), stride=1, padding=0)
         self.pool2 = torch.nn.MaxPool2d(kernel_size=(2, 2))
         self.relu2 = ReLU()
         self.conv3 = torch.nn.Conv2d(64, 120, kernel_size=(2,2), stride=1, padding=0)
         self.pool3 = torch.nn.MaxPool2d(kernel_size=(2, 2))
         self.relu33 = ReLU()
+        self.conv4 = torch.nn.Conv2d(120, 240, kernel_size=(2,2), stride=1, padding=0)
+        self.pool4 = torch.nn.MaxPool2d(kernel_size=(2, 2))
+        self.relu44 = ReLU()
         
-        self.fc1 = torch.nn.Linear(120, 1200)
+        self.fc1 = torch.nn.Linear(240, 1200)
         self.flat = torch.nn.Flatten()
         self.relu3 = ReLU()
         self.fc2 = torch.nn.Linear(in_features=1200, out_features=600)
@@ -84,9 +87,11 @@ class CNN(torch.nn.Module):
     def forward(self, x):
   		# POOL layers
         x= x.cuda()
+        
         x = self.conv1(x)
         x = self.relu1(x)
         x = self.pool1(x)
+        
        
   		# pass the output from the previous layer through the second
   		# set of CONV => RELU => POOL layers
@@ -94,13 +99,14 @@ class CNN(torch.nn.Module):
         x = self.relu2(x)
         x = self.pool2(x)
         
-        x = self.conv2(x)
-        x = self.relu2(x)
-        x = self.pool2(x)
-        
+ 
         x = self.conv3(x)
         x = self.relu33(x)
         x = self.pool3(x)
+        
+        x = self.conv4(x)
+        x = self.relu44(x)
+        x = self.pool4(x)
         
   		# flatten the output from the previous layer and pass it
   		# through our only set of FC => RELU layers
@@ -127,7 +133,7 @@ optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
 
 def train_model():
     # Train the model
-    for epoch in range(25):
+    for epoch in range(40):
         for i, (images, labels) in enumerate(train_loader):
             # Forward pass
             outputs = model(images)

@@ -75,7 +75,8 @@ def detect_words():
   # Read the image.
   #image = take_screenshot()
   #cv2.imwrite("data\\screenshot.png", image)
-  image = cv2.imread("C:\\Users\\admin\\Pictures\\Screenshots\\Screenshot 2023-08-23 165728.png")
+  #image = cv2.imread("C:\\Users\\admin\\Pictures\\Screenshots\\Screenshot 2023-08-23 165728.png")
+  image = cv2.imread("C:\\Users\\admin\\Pictures\\Screenshots\\Screenshot 2023-08-24 194946.png")
   
   
   # Create the kernel.
@@ -137,7 +138,7 @@ def detect_words():
   
   return rects
 
-#detect_words()
+detect_words()
 
 # segmenting chars using "dissection" method
 
@@ -149,14 +150,14 @@ for filename in os.listdir("preprocess"):
         continue
          
     # Convert the input image to grayscale
-    #image = cv2.imread("preprocess\\104.png") 
+    #image = cv2.imread("preprocess\\421.png") 
     image = cv2.imread(image_path) 
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
      
      # Define the kernel size and anchor point for the erosion filter
     kernel_size = (3, 3)
     anchor_point = (-1, -1)
-    ret, thresh = cv2.threshold(gray,100,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU) # 
+    ret, thresh = cv2.threshold(gray,100,255, cv2.THRESH_OTSU) # 
     # Creating kernel
     kernel = np.ones((2, 2), np.uint8)
     # Using cv2.erode() method 
@@ -175,11 +176,33 @@ for filename in os.listdir("preprocess"):
             zeros_len=0
         prev = dissect_array[i]
     
+    ret, thresh = cv2.threshold(gray,100,255,cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU) # 
+# apply connected component analysis to the thresholded image
+    output = cv2.connectedComponentsWithStats(
+    	gray, 4,  cv2.CV_32S)
+    (numLabels, labels, stats, centroids) = output
+
+   # print(numLabels)
+    
+     # Loop over all the connected components.
+    for i in range(1, numLabels, 1):
+        # Find the bounding box of the connected component.
+        x = stats[i, cv2.CC_STAT_LEFT]
+        lines_x.append(x)
+        y = stats[i, cv2.CC_STAT_TOP]
+        w = stats[i, cv2.CC_STAT_WIDTH]
+        h = stats[i, cv2.CC_STAT_HEIGHT]
+        area = stats[i, cv2.CC_STAT_AREA]
+        # Draw the bounding box on the output image.
+       # cv2.rectangle(image, (x,y),(x+w,y+h), (0, 255, 0), 1)
+    lines_x.sort()
+    linex_x = set(lines_x)
+    # dissect characters
     x0 = 0
     lines_x.append(thresh.shape[1])
     for n_Char, x in enumerate(lines_x):
         if x0!=0:
-            cropped_char = image[0:thresh.shape[1],x0:x]
+            cropped_char = image[0:thresh.shape[1],x0:x]    
             if cropped_char.shape[1] >= 2:
                 bg = cropped_char[0,0]
                 cropped_char = cv2.resize(cropped_char, (20,20))
@@ -188,12 +211,13 @@ for filename in os.listdir("preprocess"):
                 large_img[6:26,6:26] = cropped_char
                 #print(cropped_char.shape)
                 cv2.imwrite(f"preprocess\\chars\\{n_word}_{n_Char}.png", large_img)
-        #cv2.line(thresh, (x, 0), (x, thresh.shape[1]), (0, 255, 0), 1)
+       #cv2.line(image, (x, 0), (x, thresh.shape[1]), (0, 255, 0), 1)
         x0 = x
+  
      # Apply the erosion filter to the grayscale image
     #result = cv2.dilate(gray, kernel=kernel_size, anchor=anchor_point, iterations=1)
+    #plot_opencv_image(image)
     #plot_opencv_image(thresh)
     #break
- # cv2.waitKey(0)
 
   

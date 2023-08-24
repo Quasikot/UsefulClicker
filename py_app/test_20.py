@@ -15,6 +15,7 @@ from torchvision.io import read_image, ImageReadMode
 from PIL import Image
 import cv2
 import matplotlib.pyplot as plt
+from Levenshtein import distance
 
 # Create a custom dataset class
 class CharDataset(torch.utils.data.Dataset):
@@ -27,6 +28,7 @@ class CharDataset(torch.utils.data.Dataset):
         for filename in os.listdir(root_dir):
             image_path = os.path.join(root_dir, filename)
             label = int(filename.split('_')[0])
+            
             #print(f"label {label}")
 
             self.images.append(image_path)
@@ -38,6 +40,8 @@ class CharDataset(torch.utils.data.Dataset):
     def __getitem__(self, index):
         image_path = self.images[index] # Image.open(image_path) #
         image =  read_image(image_path, ImageReadMode.GRAY)
+        charIdx = image_path.split('_')[1].split(".")[0]
+        print(charIdx)
        # if self.transform is not None:
        #     image = self.transform(image)
        # image = torch.tensor(image)
@@ -49,25 +53,28 @@ class CharDataset(torch.utils.data.Dataset):
         label = torch.tensor(self.labels[index])
         label = label.to('cuda')
 
-        return image_path, image, label
+        return charIdx, image_path, image, label
 
-num_classes = 88
+num_classes = 154
 # Define the CNN model
 class CNN(torch.nn.Module):
     def __init__(self):
         super(CNN, self).__init__()
 
-        self.conv1 = torch.nn.Conv2d(1, 64, kernel_size=(5,5), stride=1, padding=1)
+        self.conv1 = torch.nn.Conv2d(1, 32, kernel_size=(5,5), stride=1, padding=1)
         self.pool1 = torch.nn.MaxPool2d(kernel_size=(2, 2))
         self.relu1 = ReLU()
-        self.conv2 = torch.nn.Conv2d(64, 64, kernel_size=(2,2), stride=1, padding=0)
+        self.conv2 = torch.nn.Conv2d(32, 64, kernel_size=(2,2), stride=1, padding=0)
         self.pool2 = torch.nn.MaxPool2d(kernel_size=(2, 2))
         self.relu2 = ReLU()
         self.conv3 = torch.nn.Conv2d(64, 120, kernel_size=(2,2), stride=1, padding=0)
         self.pool3 = torch.nn.MaxPool2d(kernel_size=(2, 2))
         self.relu33 = ReLU()
+        self.conv4 = torch.nn.Conv2d(120, 240, kernel_size=(2,2), stride=1, padding=0)
+        self.pool4 = torch.nn.MaxPool2d(kernel_size=(2, 2))
+        self.relu44 = ReLU()
         
-        self.fc1 = torch.nn.Linear(120, 1200)
+        self.fc1 = torch.nn.Linear(240, 1200)
         self.flat = torch.nn.Flatten()
         self.relu3 = ReLU()
         self.fc2 = torch.nn.Linear(in_features=1200, out_features=600)
@@ -78,9 +85,11 @@ class CNN(torch.nn.Module):
     def forward(self, x):
   		# POOL layers
         x= x.cuda()
+        
         x = self.conv1(x)
         x = self.relu1(x)
         x = self.pool1(x)
+        
        
   		# pass the output from the previous layer through the second
   		# set of CONV => RELU => POOL layers
@@ -88,13 +97,14 @@ class CNN(torch.nn.Module):
         x = self.relu2(x)
         x = self.pool2(x)
         
-        x = self.conv2(x)
-        x = self.relu2(x)
-        x = self.pool2(x)
-        
+ 
         x = self.conv3(x)
         x = self.relu33(x)
         x = self.pool3(x)
+        
+        x = self.conv4(x)
+        x = self.relu44(x)
+        x = self.pool4(x)
         
   		# flatten the output from the previous layer and pass it
   		# through our only set of FC => RELU layers
@@ -109,7 +119,7 @@ class CNN(torch.nn.Module):
         output = self.logSoftmax(x)
         return x
 
-chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()-_+={}[]:;<>,.?/'
+chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдеёжзийклмнопрстуфхцчшщъыьэюя!@#$%^&*()-_+={}[]:;<>,.?/'   
 # # Test the model
 model = torch.load("english_chars_cnn.model")
 test_dataset = CharDataset(root_dir='preprocess//chars')
@@ -122,7 +132,7 @@ total = 0
 
 words = {}
 
-for i, (image_paths, images, labels) in enumerate(train_loader):
+for i, (charIdxs, image_paths, images, labels) in enumerate(train_loader):
     outputs = model(images)
     _, predicted = torch.max(outputs.data, 1)
     #print(f"labels={len(labels)}")
@@ -135,8 +145,38 @@ for i, (image_paths, images, labels) in enumerate(train_loader):
     correct += (predicted == labels).sum().item()
     for i, label in enumerate(labels):
         if label.item() not in words:
-            words[label.item()] = ""
+            words[label.item()] = []
             print(label.item())
-        words[label.item()]+=chars[predicted[i]] 
-print(words)
+        words[label.item()].append((int(charIdxs[i]),chars[predicted[i]]))
+        
+def sort_pairs(pairs):
+  """Sorts a list of pairs by the first element of the pair."""
+  pairs.sort(key=lambda pair: pair[0])
+  return pairs
+
+for key in words:
+    words[key] = sort_pairs(words[key])
+    string=""
+    for c in words[key]:
+        string+=c[1]
+    print(f"{key}:{string}")
+
+
+# # fix words by Levenshtein distance
+# with open('data\\en_US-large.txt', 'r', encoding='utf-8') as f:
+#     # Get a list of all the lines in the file
+#     lines = f.readlines()
+    
+# for key in words:
+#   min_distance=202002020;
+#   word_min = ""
+#   for voc_word in lines:
+#       voc_word = voc_word.strip("\n")
+#       d = distance(words[key], voc_word)
+#       if d < min_distance:
+#           word_min = voc_word
+#           min_distance = d
+#   words[key] = word_min
+      
+
 #print('Accuracy: {}%'.format(100 * correct / total))

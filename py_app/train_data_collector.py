@@ -39,10 +39,10 @@ def affine_transform(image, angle, translate, scale_factor):
 
 def renderChar(character, font, bg=None):
     
-       image = QImage(32, 32, QImage.Format_RGB888)
+       image = QImage(64, 64, QImage.Format_RGB888)
        painter = QPainter(image)
        f = QFont(font)
-       f.setPixelSize(20)
+       f.setPixelSize(random.randint(15, 45))
        painter.setFont(f)
        painter.setPen(Qt.black)
        if random.randint(0,10) < 2:
@@ -61,8 +61,20 @@ def renderChar(character, font, bg=None):
            painter.fillRect(image.rect(), bg)
        painter.drawText(image.rect(), Qt.AlignCenter, character)
        bounding_rect = painter.boundingRect(image.rect(), Qt.AlignCenter, character)
-       bounding_rect.setLeft(bounding_rect.left()-3)
-       bounding_rect.setWidth(bounding_rect.width()+3)
+       bounding_rect.setTop(bounding_rect.top()-random.randint(0, 10))
+       bounding_rect.setLeft(bounding_rect.left()-random.randint(3, 10))
+       bounding_rect.setWidth(bounding_rect.width()+random.randint(0, 10))
+       bounding_rect.setHeight(bounding_rect.height()+random.randint(0, 10))
+       if bounding_rect.top() < 0:
+           bounding_rect.setTop(0)
+           #print("less that zero")
+       if bounding_rect.left() < 0:
+           bounding_rect.setLeft(0)
+       if bounding_rect.left() + bounding_rect.width() > image.rect().width():
+           bounding_rect.setWidth(image.rect().width()-bounding_rect.left())
+       if bounding_rect.top() +  bounding_rect.height() > image.rect().height():
+          bounding_rect.setHeight(image.rect().height() - bounding_rect.top())
+           #print("less that zero")
        image2 = image.copy(bounding_rect).scaled(32,32)
        del painter
        return image2
@@ -76,25 +88,28 @@ def remove_items(list_, indices):
   return new_list
 
 def prepare_char_data_qt():
-    chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()-_+={}[]:;<>,.?/'
-    #chars = 'abf'
+    chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдеёжзийклмнопрстуфхцчшщъыьэюя!@#$%^&*()-_+={}[]:;<>,.?/'   
+    print(f"num_classes={len(chars)}")
     
     db = QFontDatabase()
-    indexes_to_remove = [32,60,71,137,165,168,179,254,255,257,258,259]
+    indexes_to_remove = [1,32,80,60,71,137,165,168,179,254,255,257,258,259,41,92,114,164,188,155,148,149,152,168,239,240]
     fonts = [font for font in db.families()]
     fonts = remove_items(fonts, indexes_to_remove)
+    russian_fonts = fonts[0:144]
     fonts_for_train = fonts
     fonts_for_test = fonts[5:10]
   
     i = 0
     character_index = 0
    
+   
     # train data
     for character in chars:
-        for font in fonts_for_train:
-          image = renderChar(character, font)  
-          image.save(f"char_data\{character_index}_{i}.png")
-          i = i + 1
+        for font in russian_fonts:
+            for j in range(0,3,1):
+                image = renderChar(character, font)  
+                image.save(f"char_data\{character_index}_{i}.png")
+                i = i + 1
         character_index = character_index + 1
    
     # train data with affine transforms
