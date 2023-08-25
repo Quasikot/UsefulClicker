@@ -13,7 +13,6 @@ from preprocess import detect_words, char_segmentation
 import subprocess
 import time
 import pyautogui
-from test_20 import CNN, CNNRecognitionTest1
 
 def ClickImageHash(known_hash):
     rects = detect_words()
@@ -52,6 +51,6 @@ def NotepadTest1():
     pyautogui.press('backspace')
     
     
-#ClickImageHashTest()
+ClickImageHashTest()
 #NotepadTest1()
 #ClickRectTest()

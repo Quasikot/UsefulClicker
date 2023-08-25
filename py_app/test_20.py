@@ -17,6 +17,7 @@ import cv2
 import matplotlib.pyplot as plt
 from Levenshtein import distance
 from preprocess import char_segmentation
+from gui import get_words_window
 
 # Create a custom dataset class
 class CharDataset(torch.utils.data.Dataset):
@@ -114,7 +115,7 @@ class CNN(torch.nn.Module):
         return x
 
 def CNNRecognitionTest1():
-    char_segmentation()
+    rects=char_segmentation()
     
     chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдеёжзийклмнопрстуфхцчшщъыьэюя!@#$%^&*()-_+={}[]:;<>,.?/'   
     # # Test the model
@@ -157,12 +158,16 @@ def CNNRecognitionTest1():
       pairs.sort(key=lambda pair: pair[0])
       return pairs
     
+    words2 = {}
     for key in words:
-        words[key] = sort_pairs(words[key])
+        pairs = sort_pairs(words[key])
         string=""
-        for c in words[key]:
+        for c in pairs:
             string+=c[1]
         print(f"{key}:{string}")
+        words2[key] = string
+    
+    return words2, rects
     
     
     # # fix words by Levenshtein distance
@@ -183,4 +188,5 @@ def CNNRecognitionTest1():
               
         
         #print('Accuracy: {}%'.format(100 * correct / total))
-CNNRecognitionTest1()
+words, rects = CNNRecognitionTest1()
+get_words_window(words, rects)

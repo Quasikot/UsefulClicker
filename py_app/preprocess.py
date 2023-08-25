@@ -6,6 +6,7 @@ import random
 from screenshot import take_screenshot
 import sys
 import os
+import shutil
 
 def plot_opencv_image(image):
 
@@ -114,6 +115,16 @@ def detect_words():
 
 # segmenting chars using "dissection" method
 def char_segmentation():
+    try:
+        shutil.rmtree("preprocess")
+    except:
+        pass
+    try:
+        os.mkdir('preprocess')
+        os.mkdir('preprocess//chars')
+    except:
+        pass
+   
     rects = detect_words()
     screenshot =  cv2.imread("data\\screenshot.png")
 
@@ -196,5 +207,5 @@ def char_segmentation():
         #plot_opencv_image(image)
         #plot_opencv_image(thresh)
         #break
-
+    return rects
 #char_segmentation()
