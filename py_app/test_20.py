@@ -9,17 +9,16 @@ from torch.nn import ReLU, LogSoftmax
 from torch import flatten
 import torchvision
 import torchvision.transforms as transforms
-import torchvision.transforms.functional as TF
 import torch.utils.data as data_utils
 import os
-from torchvision.io import read_image, ImageReadMode
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
-from Levenshtein import distance
+#from Levenshtein import distance
 from preprocess import char_segmentation
 from gui import get_words_window
 from PIL import Image
+
 # Create a custom dataset class
 class CharDataset(torch.utils.data.Dataset):
     def __init__(self, root_dir, chars_dict):
