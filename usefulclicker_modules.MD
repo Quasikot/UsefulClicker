@@ -2,7 +2,8 @@
   + - + - + created by Vladimir Baranov (Quasikot)  <br>
   + - + - + email: vsbaranov83@gmail.com  <br>      
 
-The system tested with following software packages:
+The system tested with following software packages: <br/>
+
 Python 3.10.9 <br/>
 matplotlib 3.7.0 <br/>
 opencv-python 4.7.0.72 <br/>
