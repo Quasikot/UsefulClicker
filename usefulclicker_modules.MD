@@ -3,9 +3,9 @@
   + - + - + email: vsbaranov83@gmail.com  <br>      
 
 The system tested with following software packages:
-Python 3.10.9
-matplotlib 3.7.0
-opencv-python 4.7.0.72
+Python 3.10.9 <br/>
+matplotlib 3.7.0 <br/>
+opencv-python 4.7.0.72 <br/>
 conda install pytorch==2.0.0 torchvision==0.15.0 torchaudio==2.0.0 pytorch-cuda=11.8 -c pytorch -c nvidia
 
 #                     List of main modules
