@@ -6,8 +6,10 @@ from PyQt5.QtGui import QImage
 import numpy as np
 import cv2
 from cv2 import imread
-from preprocess import detect_buttons
+from preprocess import detect_words
 from hash_image import hash_image
+
+ghash_value = ""
 
 def convertQImageToMat(incomingImage):
     '''  Converts a QImage into an opencv MAT format  '''
@@ -27,10 +29,10 @@ class MainWindow(QtWidgets.QMainWindow):
     
     def __init__(self, img_path):
         super().__init__()
-        self.rects = detect_buttons()
+        self.rects = detect_words()
         self.qrects = []
         self.selected_rect = QtCore.QRect()
-        known_image_hashes = ['0xc340513709400066']
+        self.hash = ""
        
         for r in self.rects:
             self.qrects.append(self.tuple_to_qrect(r))
@@ -40,8 +42,8 @@ class MainWindow(QtWidgets.QMainWindow):
       
         #return
         self.qimg = QImage("screenshot.png")
-        self.highlighted_indexes = self.find_image_hashes(known_image_hashes)
-        print(self.highlighted_indexes)
+        #self.highlighted_indexes = self.find_image_hashes(known_image_hashes)
+        #print(self.highlighted_indexes)
         self.setMouseTracking(True)
         self.last_pos = QtCore.QPoint()
         
@@ -100,9 +102,10 @@ class MainWindow(QtWidgets.QMainWindow):
         
     def mousePressEvent(self, event):
         cropped_image = self.crop_image(self.qimg, self.selected_rect)
-        cropped_image.save("cropped.png")
+        #cropped_image.save("cropped.png")
         hash_value = hash_image(convertQImageToMat(cropped_image))
-        print(f" hash_image = {hash_value}")
+        self.hash = hash_value
+        app = QtWidgets.QApplication.instance()
         app.closeAllWindows()
         
     def paintEvent(self, event):
@@ -119,19 +122,24 @@ class MainWindow(QtWidgets.QMainWindow):
             else:
                 painter.setPen(QtGui.QPen(QtGui.QColor('green')))
                 painter.fillRect(qr, QtGui.QColor(0,255,0,100))
-            if(index in self.highlighted_indexes):
-                painter.setPen(QtGui.QPen(QtGui.QColor('red')))
-                painter.fillRect(qr, QtGui.QColor(0,255,0,200))
             painter.drawRect(qr)
             index = index + 1
             
             
 
-
-
-if __name__ == "__main__":
+def get_image_hash_window():
     app = QtWidgets.QApplication(sys.argv)
     img_path = 'screenshot.png'
     window = MainWindow(img_path)
     window.show()
-    sys.exit(app.exec())
+    app.exec()
+    return window.hash
+
+def get_rect_window():
+    app = QtWidgets.QApplication(sys.argv)
+    img_path = 'screenshot.png'
+    window = MainWindow(img_path)
+    window.show()
+    app.exec()
+    r = window.selected_rect
+    return (r.x(),r.y(),r.width(),r.height())

@@ -13,8 +13,7 @@ def hash_image(image):
     hash_value = 0
     for i in range(8):
         for j in range(8):
-            hash_value += image[i][j] * 2**(8 * i + j)
-    
+            hash_value += (image[i][j]/2) * 2**(8 * i + j)
     hex_string = double_to_hex(hash_value)
 
     return hex_string

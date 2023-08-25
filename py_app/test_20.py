@@ -16,6 +16,7 @@ from PIL import Image
 import cv2
 import matplotlib.pyplot as plt
 from Levenshtein import distance
+from preprocess import char_segmentation
 
 # Create a custom dataset class
 class CharDataset(torch.utils.data.Dataset):
@@ -29,8 +30,6 @@ class CharDataset(torch.utils.data.Dataset):
             image_path = os.path.join(root_dir, filename)
             label = int(filename.split('_')[0])
             
-            #print(f"label {label}")
-
             self.images.append(image_path)
             self.labels.append(label)
 
@@ -41,11 +40,6 @@ class CharDataset(torch.utils.data.Dataset):
         image_path = self.images[index] # Image.open(image_path) #
         image =  read_image(image_path, ImageReadMode.GRAY)
         charIdx = image_path.split('_')[1].split(".")[0]
-        print(charIdx)
-       # if self.transform is not None:
-       #     image = self.transform(image)
-       # image = torch.tensor(image)
-       # image = (imagetun).unsqueeze(0)
         image = image.float()
         image = image.to('cuda')
        
@@ -119,64 +113,74 @@ class CNN(torch.nn.Module):
         output = self.logSoftmax(x)
         return x
 
-chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдеёжзийклмнопрстуфхцчшщъыьэюя!@#$%^&*()-_+={}[]:;<>,.?/'   
-# # Test the model
-model = torch.load("english_chars_cnn.model")
-test_dataset = CharDataset(root_dir='preprocess//chars')
-train_loader = data_utils.DataLoader(test_dataset, batch_size=32, shuffle=False)
-# test_data = dataset.test_data.transform(transform)
-# test_labels = dataset.test_labels
-
-correct = 0
-total = 0
-
-words = {}
-
-for i, (charIdxs, image_paths, images, labels) in enumerate(train_loader):
-    outputs = model(images)
-    _, predicted = torch.max(outputs.data, 1)
-    #print(f"labels={len(labels)}")
-    #print(outputs.data[0])
-    #im = cv2.imread(image_paths[0])
-    #plt.imshow(im)
-    #plt.show()
-    #print(chars[predicted[0]])
-    total += labels.size(0)
-    correct += (predicted == labels).sum().item()
-    for i, label in enumerate(labels):
-        if label.item() not in words:
-            words[label.item()] = []
-            print(label.item())
-        words[label.item()].append((int(charIdxs[i]),chars[predicted[i]]))
-        
-def sort_pairs(pairs):
-  """Sorts a list of pairs by the first element of the pair."""
-  pairs.sort(key=lambda pair: pair[0])
-  return pairs
-
-for key in words:
-    words[key] = sort_pairs(words[key])
-    string=""
-    for c in words[key]:
-        string+=c[1]
-    print(f"{key}:{string}")
-
-
-# # fix words by Levenshtein distance
-# with open('data\\en_US-large.txt', 'r', encoding='utf-8') as f:
-#     # Get a list of all the lines in the file
-#     lines = f.readlines()
+def CNNRecognitionTest1():
+    char_segmentation()
     
-# for key in words:
-#   min_distance=202002020;
-#   word_min = ""
-#   for voc_word in lines:
-#       voc_word = voc_word.strip("\n")
-#       d = distance(words[key], voc_word)
-#       if d < min_distance:
-#           word_min = voc_word
-#           min_distance = d
-#   words[key] = word_min
-      
-
-#print('Accuracy: {}%'.format(100 * correct / total))
+    chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдеёжзийклмнопрстуфхцчшщъыьэюя!@#$%^&*()-_+={}[]:;<>,.?/'   
+    # # Test the model
+    model = CNN()
+    # Move the module to GPU
+    
+    model = model.to('cuda')
+    model = torch.load("models\\english_chars_cnn.model")
+    test_dataset = CharDataset(root_dir='preprocess//chars')
+    train_loader = data_utils.DataLoader(test_dataset, batch_size=32, shuffle=False)
+    # test_data = dataset.test_data.transform(transform)
+    # test_labels = dataset.test_labels
+    
+    correct = 0
+    total = 0
+    
+    words = {}
+    
+    print("OCR in progress...")
+    
+    for i, (charIdxs, image_paths, images, labels) in enumerate(train_loader):
+        outputs = model(images)
+        _, predicted = torch.max(outputs.data, 1)
+        #print(f"labels={len(labels)}")
+        #print(outputs.data[0])
+        #im = cv2.imread(image_paths[0])
+        #plt.imshow(im)
+        #plt.show()
+        #print(chars[predicted[0]])
+        total += labels.size(0)
+        correct += (predicted == labels).sum().item()
+        for i, label in enumerate(labels):
+            if label.item() not in words:
+                words[label.item()] = []
+                #print(label.item())
+            words[label.item()].append((int(charIdxs[i]),chars[predicted[i]]))
+            
+    def sort_pairs(pairs):
+      """Sorts a list of pairs by the first element of the pair."""
+      pairs.sort(key=lambda pair: pair[0])
+      return pairs
+    
+    for key in words:
+        words[key] = sort_pairs(words[key])
+        string=""
+        for c in words[key]:
+            string+=c[1]
+        print(f"{key}:{string}")
+    
+    
+    # # fix words by Levenshtein distance
+    # with open('data\\en_US-large.txt', 'r', encoding='utf-8') as f:
+    #     # Get a list of all the lines in the file
+    #     lines = f.readlines()
+        
+    # for key in words:
+    #   min_distance=202002020;
+    #   word_min = ""
+    #   for voc_word in lines:
+    #       voc_word = voc_word.strip("\n")
+    #       d = distance(words[key], voc_word)
+    #       if d < min_distance:
+    #           word_min = voc_word
+    #           min_distance = d
+    #   words[key] = word_min
+              
+        
+        #print('Accuracy: {}%'.format(100 * correct / total))
+CNNRecognitionTest1()

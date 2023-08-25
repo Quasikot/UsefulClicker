@@ -73,29 +73,19 @@ def process_word(image, n):
             
 def detect_words():
   # Read the image.
-  #image = take_screenshot()
-  #cv2.imwrite("data\\screenshot.png", image)
-  #image = cv2.imread("C:\\Users\\admin\\Pictures\\Screenshots\\Screenshot 2023-08-23 165728.png")
-  image = cv2.imread("C:\\Users\\admin\\Pictures\\Screenshots\\Screenshot 2023-08-24 194946.png")
-  
+  image = take_screenshot()
+  cv2.imwrite("data\\screenshot.png", image)
+  #image = cv2.imread("C:\\Users\\admin\\Pictures\\Screenshots\\Screenshot 2023-08-24 194946.png")
   
   # Create the kernel.
   kernel = np.array([[0,   0,    0,  ],
                      [2, 2,  2 ],
                      [0,   0,    0]])
- # kernel = kernel.T
                      
   # Detect edges on the image.
   edges = canny_edge_detection(image, 10, 100)
  
-  # Creating the kernel(2d convolution matrix)
-  #kernel = np.ones((5, 5), np.float32)/30
- # Apply convolution using OpenCV.
-  #grayscale_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-  #ret, thresh = cv2.threshold(grayscale_image,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
   conv_image = convolution_with_long_horizontal_kernel_opencv(edges, kernel)
-  cv2.imwrite("data\\conv_image.png", conv_image)
-  
   
   # Find the contours in the image.
   contours, hierarchy = cv2.findContours(conv_image, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
@@ -116,108 +106,95 @@ def detect_words():
     rects.append(bounding_rect)
     
     cropped_img = image[bounding_rect[1]:bounding_rect[1] + bounding_rect[3],bounding_rect[0]:bounding_rect[0]+ bounding_rect[2]]
-   # print(cropped_img.shape)
-    # cut word
-    if cropped_img.shape[0] > 0 and cropped_img.shape[1]>0 :
-        process_word(cropped_img, i)
-        cv2.imwrite(f"preprocess\{i}.png", cropped_img)
-    cv2.rectangle(image_canvas, (bounding_rect[0], bounding_rect[1]),
-                   (bounding_rect[0] + bounding_rect[2], bounding_rect[1] + bounding_rect[3]),
-                    random_color, 2)
-    cv2.putText(image_canvas, f"{i}", (bounding_rect[0]-10, bounding_rect[1]-10), 
-                                         cv2.FONT_HERSHEY_SIMPLEX, 0.5, [255, 0, 0], 1, cv2.LINE_AA)
-
-
-
-
-  # Display the original image and the gradient image.
-  plot_opencv_image(image_canvas)
-  
-  cv2.imwrite("data\\words.png", image_canvas)
-  
   
   return rects
 
-detect_words()
+#detect_words()
+
 
 # segmenting chars using "dissection" method
+def char_segmentation():
+    rects = detect_words()
+    screenshot =  cv2.imread("data\\screenshot.png")
 
-
-for filename in os.listdir("preprocess"):
-    image_path = os.path.join("preprocess", filename)
-    n_word = filename.split(".")[0]
-    if filename=="chars":
-        continue
-         
-    # Convert the input image to grayscale
-    #image = cv2.imread("preprocess\\421.png") 
-    image = cv2.imread(image_path) 
-    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    for n_word, bounding_rect in enumerate(rects):
+        cropped_img = screenshot[bounding_rect[1]:bounding_rect[1] + bounding_rect[3],bounding_rect[0]:bounding_rect[0]+ bounding_rect[2]]
+       # print(cropped_img.shape)
+        # cut word
+        if cropped_img.shape[0] < 2 or cropped_img.shape[1]<2 :
+            continue
+        print(f"processing word {n_word}")
      
-     # Define the kernel size and anchor point for the erosion filter
-    kernel_size = (3, 3)
-    anchor_point = (-1, -1)
-    ret, thresh = cv2.threshold(gray,100,255, cv2.THRESH_OTSU) # 
-    # Creating kernel
-    kernel = np.ones((2, 2), np.uint8)
-    # Using cv2.erode() method 
-    dissect_array = []
-    for i in range(0, thresh.shape[1], 1):
-        sum1 = 0
-        for j in range(0, thresh.shape[0], 1):
-            sum1+=(thresh[j, i]==0)
-        dissect_array.append(sum1)
-    #plt.plot(dissect_array)
-    prev = 0
-    lines_x = []
-    for i in range(0, len(dissect_array), 1):
-        if dissect_array[i] != 0 and prev == 0:
-            lines_x.append(i-1)
-            zeros_len=0
-        prev = dissect_array[i]
+     
+        # Convert the input image to grayscale
+        #image = cv2.imread("preprocess\\421.png") 
+        image = cropped_img
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+         
+         # Define the kernel size and anchor point for the erosion filter
+        kernel_size = (3, 3)
+        anchor_point = (-1, -1)
+        ret, thresh = cv2.threshold(gray,100,255, cv2.THRESH_OTSU) # 
+        # Creating kernel
+        kernel = np.ones((2, 2), np.uint8)
+        # Using cv2.erode() method 
+        dissect_array = []
+        for i in range(0, thresh.shape[1], 1):
+            sum1 = 0
+            for j in range(0, thresh.shape[0], 1):
+                sum1+=(thresh[j, i]==0)
+            dissect_array.append(sum1)
+        #plt.plot(dissect_array)
+        prev = 0
+        lines_x = []
+        for i in range(0, len(dissect_array), 1):
+            if dissect_array[i] != 0 and prev == 0:
+                lines_x.append(i-1)
+                zeros_len=0
+            prev = dissect_array[i]
+        
+        ret, thresh = cv2.threshold(gray,100,255,cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU) # 
+    # apply connected component analysis to the thresholded image
+        output = cv2.connectedComponentsWithStats(
+        	gray, 4,  cv2.CV_32S)
+        (numLabels, labels, stats, centroids) = output
     
-    ret, thresh = cv2.threshold(gray,100,255,cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU) # 
-# apply connected component analysis to the thresholded image
-    output = cv2.connectedComponentsWithStats(
-    	gray, 4,  cv2.CV_32S)
-    (numLabels, labels, stats, centroids) = output
+       # print(numLabels)
+        
+         # Loop over all the connected components.
+        for i in range(1, numLabels, 1):
+            # Find the bounding box of the connected component.
+            x = stats[i, cv2.CC_STAT_LEFT]
+            lines_x.append(x)
+            y = stats[i, cv2.CC_STAT_TOP]
+            w = stats[i, cv2.CC_STAT_WIDTH]
+            h = stats[i, cv2.CC_STAT_HEIGHT]
+            area = stats[i, cv2.CC_STAT_AREA]
+            # Draw the bounding box on the output image.
+           # cv2.rectangle(image, (x,y),(x+w,y+h), (0, 255, 0), 1)
+        lines_x.sort()
+        linex_x = set(lines_x)
+        # dissect characters
+        x0 = 0
+        lines_x.append(thresh.shape[1])
+        for n_Char, x in enumerate(lines_x):
+            if x0!=0:
+                cropped_char = image[0:thresh.shape[1],x0:x]    
+                if cropped_char.shape[1] >= 2:
+                    bg = cropped_char[0,0]
+                    cropped_char = cv2.resize(cropped_char, (20,20))
+                    large_img = cv2.imread("data\\white.bmp")
+                    large_img[:,:] = bg
+                    large_img[6:26,6:26] = cropped_char
+                    #print(cropped_char.shape)
+                    cv2.imwrite(f"preprocess\\chars\\{n_word}_{n_Char}.png", large_img)
+           #cv2.line(image, (x, 0), (x, thresh.shape[1]), (0, 255, 0), 1)
+            x0 = x
+      
+         # Apply the erosion filter to the grayscale image
+        #result = cv2.dilate(gray, kernel=kernel_size, anchor=anchor_point, iterations=1)
+        #plot_opencv_image(image)
+        #plot_opencv_image(thresh)
+        #break
 
-   # print(numLabels)
-    
-     # Loop over all the connected components.
-    for i in range(1, numLabels, 1):
-        # Find the bounding box of the connected component.
-        x = stats[i, cv2.CC_STAT_LEFT]
-        lines_x.append(x)
-        y = stats[i, cv2.CC_STAT_TOP]
-        w = stats[i, cv2.CC_STAT_WIDTH]
-        h = stats[i, cv2.CC_STAT_HEIGHT]
-        area = stats[i, cv2.CC_STAT_AREA]
-        # Draw the bounding box on the output image.
-       # cv2.rectangle(image, (x,y),(x+w,y+h), (0, 255, 0), 1)
-    lines_x.sort()
-    linex_x = set(lines_x)
-    # dissect characters
-    x0 = 0
-    lines_x.append(thresh.shape[1])
-    for n_Char, x in enumerate(lines_x):
-        if x0!=0:
-            cropped_char = image[0:thresh.shape[1],x0:x]    
-            if cropped_char.shape[1] >= 2:
-                bg = cropped_char[0,0]
-                cropped_char = cv2.resize(cropped_char, (20,20))
-                large_img = cv2.imread("data\\white.bmp")
-                large_img[:,:] = bg
-                large_img[6:26,6:26] = cropped_char
-                #print(cropped_char.shape)
-                cv2.imwrite(f"preprocess\\chars\\{n_word}_{n_Char}.png", large_img)
-       #cv2.line(image, (x, 0), (x, thresh.shape[1]), (0, 255, 0), 1)
-        x0 = x
-  
-     # Apply the erosion filter to the grayscale image
-    #result = cv2.dilate(gray, kernel=kernel_size, anchor=anchor_point, iterations=1)
-    #plot_opencv_image(image)
-    #plot_opencv_image(thresh)
-    #break
-
-  
+#char_segmentation()
