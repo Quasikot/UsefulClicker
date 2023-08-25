@@ -9,46 +9,58 @@ from torch.nn import ReLU, LogSoftmax
 from torch import flatten
 import torchvision
 import torchvision.transforms as transforms
+import torchvision.transforms.functional as TF
 import torch.utils.data as data_utils
 import os
 from torchvision.io import read_image, ImageReadMode
-from PIL import Image
 import cv2
+import numpy as np
 import matplotlib.pyplot as plt
 from Levenshtein import distance
 from preprocess import char_segmentation
 from gui import get_words_window
-
+from PIL import Image
 # Create a custom dataset class
 class CharDataset(torch.utils.data.Dataset):
-    def __init__(self, root_dir):
+    def __init__(self, root_dir, chars_dict):
         self.root_dir = root_dir
+        self.chars_dict = chars_dict
        # self.transform = transforms.Compose([transforms.ToTensor()])
         self.images = []
         self.labels = []
-
-        for filename in os.listdir(root_dir):
-            image_path = os.path.join(root_dir, filename)
-            label = int(filename.split('_')[0])
-            
-            self.images.append(image_path)
-            self.labels.append(label)
+        
+        for word_n in chars_dict:
+            for im in chars_dict[word_n]:
+                self.images.append(im)
+            for i in range(0, len(chars_dict[word_n])):
+                self.labels.append(f"{word_n}-{i}")
 
     def __len__(self):
         return len(self.images)
 
     def __getitem__(self, index):
-        image_path = self.images[index] # Image.open(image_path) #
-        image =  read_image(image_path, ImageReadMode.GRAY)
-        charIdx = image_path.split('_')[1].split(".")[0]
+        image = self.images[index]
+        # Define a transform to convert
+        # the image to torch tensor
+        transform = transforms.Compose([
+            transforms.ToTensor()
+        ])
+        im_pil = Image.fromarray(image)
+        transform = transforms.Compose([transforms.PILToTensor()])
+
+        image = transform(im_pil)
+        
+        # Convert the image to Torch tensor
+        #image = TF.to_tensor(im_pil)
+        #print(image.shape)
         image = image.float()
         image = image.to('cuda')
-       
+        #print(image.shape)
+        #assert()
 
-        label = torch.tensor(self.labels[index])
-        label = label.to('cuda')
+        label = self.labels[index]
 
-        return charIdx, image_path, image, label
+        return image, label
 
 num_classes = 154
 # Define the CNN model
@@ -115,7 +127,7 @@ class CNN(torch.nn.Module):
         return x
 
 def CNNRecognitionTest1():
-    rects=char_segmentation()
+    rects,chars_dict=char_segmentation()
     
     chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдеёжзийклмнопрстуфхцчшщъыьэюя!@#$%^&*()-_+={}[]:;<>,.?/'   
     # # Test the model
@@ -124,7 +136,7 @@ def CNNRecognitionTest1():
     
     model = model.to('cuda')
     model = torch.load("models\\english_chars_cnn.model")
-    test_dataset = CharDataset(root_dir='preprocess//chars')
+    test_dataset = CharDataset(root_dir='preprocess//chars', chars_dict=chars_dict)
     train_loader = data_utils.DataLoader(test_dataset, batch_size=32, shuffle=False)
     # test_data = dataset.test_data.transform(transform)
     # test_labels = dataset.test_labels
@@ -136,22 +148,18 @@ def CNNRecognitionTest1():
     
     print("OCR in progress...")
     
-    for i, (charIdxs, image_paths, images, labels) in enumerate(train_loader):
+    for i, (images, labels) in enumerate(train_loader):
         outputs = model(images)
         _, predicted = torch.max(outputs.data, 1)
-        #print(f"labels={len(labels)}")
-        #print(outputs.data[0])
-        #im = cv2.imread(image_paths[0])
-        #plt.imshow(im)
-        #plt.show()
-        #print(chars[predicted[0]])
-        total += labels.size(0)
-        correct += (predicted == labels).sum().item()
-        for i, label in enumerate(labels):
-            if label.item() not in words:
-                words[label.item()] = []
+        for j, label in enumerate(labels):
+            word = label.split("-")[0]
+            charIdx = label.split("-")[1]
+            #print(charIdx)
+            if word not in words:
+                words[word] = []
                 #print(label.item())
-            words[label.item()].append((int(charIdxs[i]),chars[predicted[i]]))
+            words[word].append((int(charIdx),chars[predicted[j]]))
+            
             
     def sort_pairs(pairs):
       """Sorts a list of pairs by the first element of the pair."""
@@ -165,7 +173,7 @@ def CNNRecognitionTest1():
         for c in pairs:
             string+=c[1]
         print(f"{key}:{string}")
-        words2[key] = string
+        words2[int(key)] = string
     
     return words2, rects
     

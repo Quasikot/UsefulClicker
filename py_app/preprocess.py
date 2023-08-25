@@ -127,6 +127,7 @@ def char_segmentation():
    
     rects = detect_words()
     screenshot =  cv2.imread("data\\screenshot.png")
+    chars_dict = {}
 
     for n_word, bounding_rect in enumerate(rects):
         cropped_img = screenshot[bounding_rect[1]:bounding_rect[1] + bounding_rect[3],bounding_rect[0]:bounding_rect[0]+ bounding_rect[2]]
@@ -135,7 +136,7 @@ def char_segmentation():
         if cropped_img.shape[0] < 2 or cropped_img.shape[1]<2 :
             continue
         print(f"processing word {n_word}")
-     
+        chars_dict[n_word] = []
      
         # Convert the input image to grayscale
         #image = cv2.imread("preprocess\\421.png") 
@@ -144,6 +145,7 @@ def char_segmentation():
          
          # Define the kernel size and anchor point for the erosion filter
         kernel_size = (3, 3)
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         anchor_point = (-1, -1)
         ret, thresh = cv2.threshold(gray,100,255, cv2.THRESH_OTSU) # 
         # Creating kernel
@@ -194,11 +196,13 @@ def char_segmentation():
                 if cropped_char.shape[1] >= 2:
                     bg = cropped_char[0,0]
                     cropped_char = cv2.resize(cropped_char, (20,20))
-                    large_img = cv2.imread("data\\white.bmp")
+                    large_img = np.zeros((32,32,3), np.uint8)
                     large_img[:,:] = bg
                     large_img[6:26,6:26] = cropped_char
                     #print(cropped_char.shape)
-                    cv2.imwrite(f"preprocess\\chars\\{n_word}_{n_Char}.png", large_img)
+                    #cv2.imwrite(f"preprocess\\chars\\{n_word}_{n_Char}.png", large_img)
+                    gray2 = cv2.cvtColor(large_img, cv2.COLOR_BGR2GRAY)
+                    chars_dict[n_word].append(gray2)
            #cv2.line(image, (x, 0), (x, thresh.shape[1]), (0, 255, 0), 1)
             x0 = x
       
@@ -207,5 +211,5 @@ def char_segmentation():
         #plot_opencv_image(image)
         #plot_opencv_image(thresh)
         #break
-    return rects
+    return rects, chars_dict
 #char_segmentation()

@@ -44,7 +44,6 @@ class MainWindow(QtWidgets.QMainWindow):
             self.qrects.append(self.tuple_to_qrect(r))
         #print(self.rects)
        # self.qrects = self.remove_contained_rectangles(self.qrects)
-        print(len(self.qrects))
       
         #return
         self.qimg = QImage(img_path)
@@ -135,7 +134,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.selected_rect = qr
                 if self.words!= None:
                     if i in self.words:
-                        self.label.setText(f"{i}:{self.words[i]}")
+                      self.label.setText(f"{i}:{self.words[i]}")
+                      # self.label.setText(f"{i}")
                       
                 else:
                     self.label.setText(f"{i}")

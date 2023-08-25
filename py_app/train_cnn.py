@@ -32,6 +32,7 @@ class CharDataset(torch.utils.data.Dataset):
     def __getitem__(self, index):
         image_path = self.images[index] # Image.open(image_path) #
         image =  read_image(image_path, ImageReadMode.GRAY)
+        print(image[:,:,2])
        # if self.transform is not None:
        #     image = self.transform(image)
        # image = torch.tensor(image)
