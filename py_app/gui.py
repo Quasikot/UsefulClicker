@@ -148,7 +148,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
 def get_image_hash_window():
     app = QtWidgets.QApplication(sys.argv)
-    img_path = 'data\\screenshot.png'
+    img_path = 'screenshot.png'
     window = MainWindow(img_path)
     window.show()
     app.exec()
@@ -156,7 +156,7 @@ def get_image_hash_window():
 
 def get_rect_window():
     app = QtWidgets.QApplication(sys.argv)
-    img_path = 'data\\screenshot.png'
+    img_path = 'screenshot.png'
     window = MainWindow(img_path)
     window.show()
     app.exec()
@@ -165,7 +165,7 @@ def get_rect_window():
 
 def get_words_window(words, rects):
     app = QtWidgets.QApplication(sys.argv)
-    img_path = 'data\\screenshot.png'
+    img_path = 'screenshot.png'
     window = MainWindow(img_path, words, rects)
     window.show()
     app.exec()

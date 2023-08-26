@@ -75,8 +75,8 @@ def process_word(image, n):
 def detect_words():
   # Read the image.
   image = take_screenshot()
-  cv2.imwrite("data\\screenshot.png", image)
-  #image = cv2.imread("C:\\Users\\admin\\Pictures\\Screenshots\\Screenshot 2023-08-24 194946.png")
+  cv2.imwrite("screenshot.png", image)
+  #image = cv2.imread("C:\\Users\\admin\\Pictures\\Screenshots\\Screenshot 2023-08-26 080242.png")
   
   # Create the kernel.
   kernel = np.array([[0,   0,    0,  ],
@@ -85,6 +85,7 @@ def detect_words():
                      
   # Detect edges on the image.
   edges = canny_edge_detection(image, 10, 100)
+  #plot_opencv_image(edges)
  
   conv_image = convolution_with_long_horizontal_kernel_opencv(edges, kernel)
   
@@ -107,7 +108,8 @@ def detect_words():
     rects.append(bounding_rect)
     
     cropped_img = image[bounding_rect[1]:bounding_rect[1] + bounding_rect[3],bounding_rect[0]:bounding_rect[0]+ bounding_rect[2]]
-  
+    #if cropped_img.shape[0] > 2 and cropped_img.shape[1] > 2:
+    #    cv2.imwrite(f"preprocess\\{i}.png", cropped_img)
   return rects
 
 #detect_words()
@@ -117,7 +119,7 @@ def detect_words():
 def char_segmentation():
    
     rects = detect_words()
-    screenshot =  cv2.imread("data\\screenshot.png")
+    screenshot =  cv2.imread("screenshot.png")
     chars_dict = {}
 
     for n_word, bounding_rect in enumerate(rects):
@@ -129,7 +131,7 @@ def char_segmentation():
         chars_dict[n_word] = []
      
         # Convert the input image to grayscale
-        #image = cv2.imread("preprocess\\421.png") 
+        #image = cv2.imread("preprocess\\241.png") 
         image = cropped_img
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
          
@@ -138,6 +140,13 @@ def char_segmentation():
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         anchor_point = (-1, -1)
         ret, thresh = cv2.threshold(gray,100,255, cv2.THRESH_OTSU) # 
+        # plot_opencv_image(thresh)
+        white_pixels = np.count_nonzero(thresh == 255)
+        black_pixels = np.count_nonzero(thresh == 0)
+       #print(f"{white_pixels} {black_pixels}")
+        if black_pixels > white_pixels:
+            ret, thresh = cv2.threshold(gray,100,255, cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU) 
+            image = cv2.bitwise_not(image)
         # Creating kernel
         kernel = np.ones((2, 2), np.uint8)
         # Using cv2.erode() method 
@@ -156,7 +165,10 @@ def char_segmentation():
                 zeros_len=0
             prev = dissect_array[i]
         
-        ret, thresh = cv2.threshold(gray,100,255,cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU) # 
+        if black_pixels < white_pixels:
+          ret, thresh = cv2.threshold(gray,100,255,cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU) # 
+        else:
+           ret, thresh = cv2.threshold(gray,100,255, cv2.THRESH_OTSU)   
     # apply connected component analysis to the thresholded image
         output = cv2.connectedComponentsWithStats(
         	gray, 4,  cv2.CV_32S)
@@ -183,6 +195,7 @@ def char_segmentation():
         for n_Char, x in enumerate(lines_x):
             if x0!=0:
                 cropped_char = image[0:thresh.shape[1],x0:x]    
+              
                 if cropped_char.shape[1] >= 2:
                     bg = cropped_char[0,0]
                     cropped_char = cv2.resize(cropped_char, (20,20))
@@ -202,4 +215,5 @@ def char_segmentation():
         #plot_opencv_image(thresh)
         #break
     return rects, chars_dict
+
 #char_segmentation()
